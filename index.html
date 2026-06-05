@@ -7,6 +7,8 @@
 <meta name="apple-mobile-web-app-title" content="Notelix">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#070709">
+<meta name="mobile-web-app-capable" content="yes">
 <script>
 (function(){
   function rr(ctx,x,y,w,h,r){
@@ -18,45 +20,70 @@
     ctx.closePath();
   }
   function buildIcon(){
-    var sz=180,c=document.createElement('canvas');
+    var sz=512,c=document.createElement('canvas');
     c.width=sz;c.height=sz;
     var ctx=c.getContext('2d');
-    // Background rounded square
-    var g=ctx.createLinearGradient(0,0,sz,sz);
-    g.addColorStop(0,'#9d8eff');g.addColorStop(1,'#6550e6');
-    rr(ctx,0,0,sz,sz,36);ctx.fillStyle=g;ctx.fill();
-    // Subtle top highlight
-    var g2=ctx.createLinearGradient(0,0,0,sz*0.55);
-    g2.addColorStop(0,'rgba(255,255,255,0.18)');g2.addColorStop(1,'rgba(255,255,255,0)');
-    rr(ctx,0,0,sz,sz,36);ctx.fillStyle=g2;ctx.fill();
-    // White paper body
-    var px=50,py=28,pw=74,ph=92,cut=22;
+    var R=sz*0.22;
+    // Background gradient
+    var bg=ctx.createLinearGradient(0,0,sz,sz);
+    bg.addColorStop(0,'#a896ff');bg.addColorStop(0.5,'#7b6af8');bg.addColorStop(1,'#5a48dc');
+    rr(ctx,0,0,sz,sz,R);ctx.fillStyle=bg;ctx.fill();
+    // Top shine
+    var shine=ctx.createLinearGradient(0,0,0,sz*0.5);
+    shine.addColorStop(0,'rgba(255,255,255,0.24)');shine.addColorStop(1,'rgba(255,255,255,0)');
+    rr(ctx,0,0,sz,sz,R);ctx.fillStyle=shine;ctx.fill();
+    // Paper shadow
+    ctx.save();
+    ctx.shadowColor='rgba(30,10,120,0.45)';ctx.shadowBlur=sz*0.07;
+    ctx.shadowOffsetX=sz*0.015;ctx.shadowOffsetY=sz*0.025;
+    // Paper body
+    var px=sz*0.21,py=sz*0.12,pw=sz*0.58,ph=sz*0.74,fold=sz*0.16,pr=sz*0.018;
+    var paper=ctx.createLinearGradient(px,py,px,py+ph);
+    paper.addColorStop(0,'rgba(255,255,255,0.72)');paper.addColorStop(1,'rgba(255,255,255,0.46)');
     ctx.beginPath();
-    ctx.moveTo(px,py);ctx.lineTo(px+pw-cut,py);ctx.lineTo(px+pw,py+cut);
-    ctx.lineTo(px+pw,py+ph);ctx.lineTo(px,py+ph);ctx.closePath();
-    ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fill();
-    // Corner fold shadow
+    ctx.moveTo(px+pr,py);ctx.lineTo(px+pw-fold,py);ctx.lineTo(px+pw,py+fold);
+    ctx.lineTo(px+pw,py+ph-pr);ctx.arcTo(px+pw,py+ph,px+pw-pr,py+ph,pr);
+    ctx.lineTo(px+pr,py+ph);ctx.arcTo(px,py+ph,px,py+ph-pr,pr);
+    ctx.lineTo(px,py+pr);ctx.arcTo(px,py,px+pr,py,pr);
+    ctx.closePath();
+    ctx.fillStyle=paper;ctx.fill();
+    ctx.restore();
+    // Fold triangle
     ctx.beginPath();
-    ctx.moveTo(px+pw-cut,py);ctx.lineTo(px+pw,py+cut);ctx.lineTo(px+pw-cut,py+cut);ctx.closePath();
-    ctx.fillStyle='rgba(80,60,200,0.45)';ctx.fill();
-    // Lines on paper
-    ctx.fillStyle='rgba(90,72,210,0.65)';
-    [[px+13,78,32],[px+13,91,42],[px+13,104,26],[px+13,117,37]].forEach(function(l){
-      rr(ctx,l[0],l[1],l[2],5,2.5);ctx.fill();
+    ctx.moveTo(px+pw-fold,py);ctx.lineTo(px+pw,py+fold);ctx.lineTo(px+pw-fold,py+fold);
+    ctx.closePath();ctx.fillStyle='rgba(60,35,180,0.52)';ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(px+pw-fold,py);ctx.lineTo(px+pw-fold,py+fold);ctx.lineTo(px+pw,py+fold);
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;ctx.stroke();
+    // Lines
+    var lx=px+pw*0.15,lw=pw*0.68,lh=sz*0.052,gap=sz*0.076,ly=py+ph*0.29;
+    [lw,lw*0.85,lw*0.58,lw*0.76].forEach(function(w,i){
+      rr(ctx,lx,ly+i*gap,w,lh,lh/2);
+      ctx.fillStyle='rgba(255,255,255,0.90)';ctx.fill();
     });
     return c.toDataURL('image/png');
   }
-  function setIcon(){
-    // Remove any existing apple-touch-icon
-    document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(function(el){el.parentNode.removeChild(el);});
-    var link=document.createElement('link');
-    link.rel='apple-touch-icon';
-    link.setAttribute('sizes','180x180');
-    link.href=buildIcon();
-    document.head.insertBefore(link,document.head.firstChild);
+  var _ico=null;
+  function ico(){if(!_ico)_ico=buildIcon();return _ico;}
+  function setup(){
+    document.querySelectorAll('link[rel="apple-touch-icon"],link[rel="apple-touch-icon-precomposed"]').forEach(function(e){e.parentNode.removeChild(e);});
+    var l=document.createElement('link');
+    l.rel='apple-touch-icon';l.setAttribute('sizes','512x512');l.href=ico();
+    document.head.insertBefore(l,document.head.firstChild);
+    var fav=document.querySelector('link[rel="icon"]');if(fav)fav.href=ico();
+    // Manifest for Android Chrome
+    document.querySelectorAll('link[rel="manifest"]').forEach(function(e){e.parentNode.removeChild(e);});
+    try{
+      var m={name:'Notelix',short_name:'Notelix',start_url:'.',display:'standalone',
+             background_color:'#070709',theme_color:'#070709',
+             icons:[{src:ico(),sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
+      var blob=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
+      var ml=document.createElement('link');ml.rel='manifest';ml.href=URL.createObjectURL(blob);
+      document.head.appendChild(ml);
+    }catch(e){}
   }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setIcon);}
-  else{setIcon();}
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setup);}
+  else{setup();}
 })();
 </script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237b67f8'/%3E%3Cpath d='M9 4h9l7 7v17a2 2 0 01-2 2H9a2 2 0 01-2-2V6a2 2 0 012-2z' fill='white' opacity='0.2'/%3E%3Crect x='9' y='15' width='14' height='2' rx='1' fill='white'/%3E%3Crect x='9' y='20' width='14' height='2' rx='1' fill='white'/%3E%3Crect x='9' y='25' width='9' height='2' rx='1' fill='white' opacity='0.7'/%3E%3C/svg%3E">
@@ -143,6 +170,9 @@ nav {
   height: 54px; padding: 0 1.5rem;
   padding-left: max(1.5rem, env(safe-area-inset-left));
   padding-right: max(1.5rem, env(safe-area-inset-right));
+  /* iOS PWA: push nav content below status bar */
+  padding-top: env(safe-area-inset-top);
+  height: calc(54px + env(safe-area-inset-top));
   display: flex; align-items: center;
   background: rgba(7,7,9,.92);
   backdrop-filter: blur(32px) saturate(200%);
@@ -273,7 +303,7 @@ nav {
 .nav-spacer { display: none; }
 
 /* ── PAGES ── */
-.page { display: none; min-height: calc(100dvh - 54px); min-height: calc(100vh - 54px); position: relative; z-index: 1; padding-bottom: 3rem; }
+.page { display: none; min-height: calc(100dvh - 54px - env(safe-area-inset-top)); min-height: calc(100vh - 54px); position: relative; z-index: 1; padding-bottom: 3rem; }
 .page.active { display: block; }
 .page.active .card,
 .page.active .upload-box,
@@ -292,22 +322,23 @@ nav {
 ════════════════════════ */
 #p1.active {
   display: flex; flex-direction: column; align-items: center;
-  padding: 4.6rem 1.5rem 6rem;
+  padding: 5.5rem 1.5rem 6rem;
 }
-.hero { text-align: center; max-width: 560px; margin-bottom: 2.65rem; }
+.hero { text-align: center; max-width: 540px; margin-bottom: 3rem; }
 .hero-badge {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--accentll); border: 1px solid rgba(109,87,248,.2);
-  padding: 4px 12px; border-radius: 20px; margin-bottom: 1.2rem;
+  padding: 5px 14px; border-radius: 20px; margin-bottom: 1.6rem;
   font-size: .72rem; font-weight: 600; color: var(--accent);
+  letter-spacing: .02em;
 }
 .hero h1 {
   font-size: clamp(2.65rem, 5.4vw, 4.05rem);
-  font-weight: 900; line-height: 1.03;
-  letter-spacing: 0; margin-bottom: .9rem;
+  font-weight: 900; line-height: 1.1;
+  letter-spacing: -.01em; margin-bottom: 1.25rem;
 }
 .hero h1 em { font-style: normal; background: linear-gradient(135deg,#a78bfa,#6d57f8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero p { color: var(--text2); font-size: .98rem; line-height: 1.7; font-weight: 400; }
+.hero p { color: var(--text2); font-size: .95rem; line-height: 1.75; font-weight: 400; max-width: 400px; margin: 0 auto; }
 
 /* upload zone */
 .upload-box {
@@ -589,6 +620,7 @@ nav {
 .bbar.up { opacity: 1; pointer-events: auto; transform: none; }
 .bbar-info { font-size: .75rem; color: var(--text2); }
 .bbar-info b { color: var(--text); font-weight: 700; }
+.bbar-actions { display: flex; align-items: center; gap: .6rem; }
 
 /* ════════════════════════
    STEP 3 — SETTINGS
@@ -1164,7 +1196,7 @@ input[type=range]::-webkit-slider-thumb {
 }
 /* preview */
 .lm-preview-wrap {
-  background: #0a0a10;
+  background: #0d0d14;
   border: 1px solid rgba(255,255,255,.09);
   border-radius: var(--r2);
   overflow: hidden;
@@ -1174,16 +1206,24 @@ input[type=range]::-webkit-slider-thumb {
   box-shadow: inset 0 2px 12px rgba(0,0,0,.4);
   display: flex;
   align-items: stretch;
+  min-height: 80px;
 }
 #lm-canvas {
   width: 100%;
   height: auto;
   display: block;
   max-height: 52vh;
-  background: #fff;
+  background: transparent;
   flex: 1;
   min-width: 0;
 }
+.lm-preview-no-slides {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .5rem; color: var(--text3); font-size: .8rem; font-weight: 600;
+  pointer-events: none;
+}
+.lm-preview-no-slides svg { opacity: .35; }
 .lm-region {
   position: absolute; border: 2px solid rgba(240,64,96,.85);
   background: rgba(240,64,96,.12); pointer-events: auto;
@@ -1211,6 +1251,76 @@ input[type=range]::-webkit-slider-thumb {
   padding: .75rem 1.3rem; border-top: 1px solid var(--border);
 }
 .lm-hint { font-size: .68rem; color: var(--text3); }
+
+/* ──── Logo Modal: section layout ──── */
+.lm-section { display:flex; flex-direction:column; gap:.42rem; }
+.lm-sec-label { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text3); }
+
+/* Logo tab cards (2-col grid) */
+.lm-logo-tabs {
+  display:grid; grid-template-columns:1fr 1fr; gap:.45rem;
+}
+.lm-tab {
+  display:flex; align-items:center; gap:.5rem;
+  padding:.6rem .85rem;
+  background:var(--bg2); border:1.5px solid var(--border); border-radius:var(--r);
+  cursor:pointer; font-size:.78rem; font-weight:700; color:var(--text2);
+  transition:all .14s; text-align:left;
+}
+.lm-tab.on { border-color:rgba(109,87,248,.48); background:var(--accentll); color:var(--text); }
+.lm-tab:hover:not(.on) { border-color:rgba(255,255,255,.16); color:var(--text); }
+.lm-tab-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.lm-tab-divider { display:none; }
+
+/* Enable / Disable toggle — full-width pill below logo cards */
+.lm-enable-toggle {
+  display:flex; align-items:center; gap:.65rem;
+  padding:.58rem .9rem; width:100%;
+  background:rgba(30,204,122,.09); border:1.5px solid rgba(30,204,122,.35);
+  border-radius:var(--r); cursor:pointer; transition:all .18s;
+  box-shadow: 0 0 0 0 rgba(30,204,122,.0);
+}
+.lm-enable-toggle.on:hover { background:rgba(30,204,122,.13); border-color:rgba(30,204,122,.55); }
+.lm-enable-toggle:not(.on) {
+  background:rgba(240,64,96,.07); border-color:rgba(240,64,96,.32);
+}
+.lm-enable-toggle:not(.on):hover { background:rgba(240,64,96,.12); border-color:rgba(240,64,96,.52); }
+.lm-enable-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--green); flex-shrink:0; transition:all .18s;
+  box-shadow:0 0 0 3px rgba(30,204,122,.2);
+}
+.lm-enable-toggle:not(.on) .lm-enable-dot { background:var(--red); box-shadow:0 0 0 3px rgba(240,64,96,.18); }
+.lm-enable-txt { font-size:.8rem; font-weight:800; color:var(--green); transition:color .18s; flex:1; }
+.lm-enable-toggle:not(.on) .lm-enable-txt { color:var(--red); }
+
+/* Corner grid — 2×2 */
+.lm-corner-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:.38rem;
+}
+.lm-corner {
+  display:flex; align-items:center; justify-content:center; gap:.38rem;
+  padding:.46rem .6rem;
+  background:var(--bg2); border:1.5px solid var(--border); border-radius:var(--r);
+  cursor:pointer; font-size:.72rem; font-weight:700; color:var(--text3);
+  transition:all .12s;
+}
+.lm-corner:hover:not(.on) { border-color:rgba(255,255,255,.16); color:var(--text2); background:var(--bg3); }
+.lm-corner.on { border-color:rgba(109,87,248,.48); background:var(--accentll); color:var(--accent); }
+.lm-corner svg { flex-shrink:0; }
+
+/* Slider ± buttons */
+.slider-btn {
+  width:28px; height:28px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg2); border:1.5px solid var(--border); border-radius:7px;
+  cursor:pointer; color:var(--text3); transition:all .12s;
+}
+.slider-btn:hover { border-color:rgba(255,255,255,.18); color:var(--text2); background:var(--bg3); }
+
+/* Sub-row layouts */
+.lm-page-row { flex-direction:row; align-items:center; gap:.75rem; }
+.lm-sliders  { gap:.6rem; }
 
 /* ════════════════════════
    SHARED BUTTONS
@@ -1486,10 +1596,10 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 @media (max-width: 768px) {
-  #p1.active { padding: 3rem 1rem 3.8rem; padding-bottom: max(3.8rem, env(safe-area-inset-bottom)); }
-  .hero { margin-bottom: 2rem; }
-  .hero h1 { font-size: clamp(2.35rem, 12vw, 3.25rem); }
-  .hero p { font-size: .92rem; }
+  #p1.active { padding: 4.5rem 1.5rem 4.5rem; padding-bottom: max(4.5rem, env(safe-area-inset-bottom)); }
+  .hero { margin-bottom: 2.6rem; padding: 0; }
+  .hero h1 { font-size: clamp(2.4rem, 12vw, 3.25rem); line-height: 1.1; margin-bottom: 1.1rem; }
+  .hero p { font-size: .92rem; line-height: 1.72; max-width: 320px; }
   .upload-box { border-radius: 16px; }
   .dz-inner { padding: 2.7rem 1.35rem 2.35rem; }
   .features { grid-template-columns: repeat(2, 1fr); gap: .55rem; }
@@ -1503,7 +1613,6 @@ input[type=range]::-webkit-slider-thumb {
     margin-right: auto;
     bottom: max(.75rem, env(safe-area-inset-bottom));
   }
-  .bbar > div:first-child { flex-wrap: wrap; gap: .55rem; }
   .card { padding: 1.1rem; }
   .lp-wrap { flex-direction: column; align-items: center; text-align: center; min-height: auto; }
   .lp-stat { text-align: center; }
@@ -1521,24 +1630,69 @@ input[type=range]::-webkit-slider-thumb {
     max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    gap: .85rem;
-    padding: .7rem .85rem;
-  }
-  .em-side > div { flex: 0 0 auto; min-width: 128px; }
-  .em-canvas-wrap { padding: .75rem; min-height: 0; }
-  .em-ft {
     flex-direction: column;
-    align-items: stretch;
-    gap: .65rem;
-    padding: .75rem 1rem;
-    padding-bottom: max(.75rem, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    gap: 0;
+    padding: .85rem 1rem;
   }
-  .em-ft > div { flex-wrap: wrap; justify-content: flex-end; }
+  /* Clean sections like logo modal */
+  .em-side > div {
+    flex: none;
+    min-width: 0;
+    width: 100%;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    margin-bottom: .75rem;
+  }
+  .em-side > div:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  /* Tool + action options: two-column pill grid */
+  .sel-opt, .ea-opt {
+    display: inline-flex;
+    margin-bottom: 0;
+    padding: .5rem .85rem;
+    border-radius: 8px;
+    font-size: .76rem;
+  }
+  .es-sec-t { margin-bottom: .5rem; }
+  /* Lay selection tools in a row */
+  .em-side > div:first-child > .sel-opt,
+  .em-side > div:nth-child(2) > .ea-opt {
+    display: inline-flex;
+    width: auto;
+    margin-right: .35rem;
+    margin-bottom: .35rem;
+  }
+  /* Override to a flex-wrap row */
+  .em-side > div:first-child,
+  .em-side > div:nth-child(2) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+  }
+  .em-side > div:first-child .es-sec-t,
+  .em-side > div:nth-child(2) .es-sec-t {
+    width: 100%;
+    flex-shrink: 0;
+  }
+  /* History row stays compact */
+  .hist-row { gap: .4rem; }
+  .hbtn { padding: .45rem .65rem; font-size: .72rem; }
+  .em-canvas-wrap { padding: .65rem; min-height: 0; }
+  .em-ft {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: .5rem;
+    padding: .6rem .85rem;
+    padding-bottom: max(.6rem, env(safe-area-inset-bottom));
+  }
   .em-hint { display: none; }
+  .em-status { font-size: .65rem; color: var(--text3); }
+  .em-ft > div { gap: .45rem; }
   .logo-modal {
     width: 100%;
     max-width: 100%;
@@ -1557,41 +1711,54 @@ input[type=range]::-webkit-slider-thumb {
     padding: 0;
     gap: 0;
   }
-  /* Controls scroll above preview on mobile */
+  /* Controls: compact fixed height, scrollable if needed */
   .lm-controls {
     flex: 0 0 auto;
-    max-height: 52dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: .85rem;
+    padding: .75rem 1rem .8rem;
     border-radius: 0;
     border-left: none;
     border-right: none;
     border-top: none;
-    margin: .75rem;
-    margin-bottom: 0;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    margin: 0;
+    gap: .6rem;
   }
-  /* Shape+Corner row: stack vertically on mobile */
-  .lm-controls > div[style*="flex:1"] {
-    min-width: 0 !important;
+  /* Logo slots: 2-col stays on mobile, just more compact */
+  .lm-logo-tabs { gap:.35rem; }
+  .lm-tab { padding: .45rem .65rem; font-size: .74rem; }
+  .lm-enable-toggle { padding: .46rem .75rem; }
+  .lm-enable-txt { font-size: .76rem; }
+  /* Shape + corner: side by side compact */
+  .lm-shape-corner-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1.6fr !important;
+    gap: .6rem !important;
+    flex-wrap: nowrap !important;
   }
-  .lm-controls > div[style*="flex-wrap:wrap"] {
-    flex-direction: column !important;
-    gap: .65rem !important;
-  }
-  /* Corner grid: 2x2 compact */
-  #corner-group {
-    gap: .28rem !important;
-  }
+  .lm-shape-corner-row > div { min-width: 0 !important; }
+  .es-sec-t { font-size: .58rem; margin-bottom: .35rem !important; }
+  #shape-group { flex-direction: column; gap: .28rem; }
+  #shape-group .shape-opt { padding: .38rem .6rem; }
+  #shape-group .shape-opt span { font-size: .72rem; }
+  #corner-group { gap: .28rem !important; }
   #corner-group .shape-opt {
-    padding: .45rem .5rem !important;
-    font-size: .7rem !important;
+    padding: .35rem .3rem !important;
+    font-size: .66rem !important;
+    justify-content: center;
   }
-  /* Shape selector on mobile */
-  #shape-group {
-    flex-direction: row;
-  }
-  /* Preview below controls */
+  /* Sliders compact */
+  .slider-row { gap: .4rem; min-height: 36px; }
+  .slider-lbl { width: 40px; font-size: .67rem; }
+  .slider-val { width: 28px; font-size: .67rem; }
+  input[type=range] { min-height: 26px; }
+  input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; }
+  /* Page selector compact */
+  .page-sel-row { gap: .5rem; }
+  .page-sel-lbl { font-size: .68rem; }
+  .page-sel-drop { font-size: .72rem; padding: .32rem .55rem; }
+  /* Preview: fills all remaining vertical space */
   .lm-preview-wrap {
     flex: 1;
     min-height: 0;
@@ -1600,56 +1767,63 @@ input[type=range]::-webkit-slider-thumb {
     border-left: none;
     border-right: none;
     border-bottom: none;
+    background: #060608;
   }
-  #lm-canvas { width: 100%; height: 100%; max-height: none; display: block; }
-  .logo-slots { grid-template-columns: 1fr 1fr; }
-  .slider-row { gap: .5rem; min-height: 44px; }
-  .slider-lbl { width: 44px; font-size: .68rem; }
-  input[type=range] { min-height: 28px; cursor: pointer; }
-  input[type=range]::-webkit-slider-thumb { width: 20px; height: 20px; }
+  #lm-canvas { width: 100%; height: 100%; max-height: none; object-fit: contain; display: block; }
   .lm-ft {
-    flex-direction: column;
-    align-items: stretch;
-    gap: .65rem;
-    padding: .75rem 1rem;
-    padding-bottom: max(.75rem, env(safe-area-inset-bottom));
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .6rem 1rem;
+    padding-bottom: max(.6rem, env(safe-area-inset-bottom));
     flex-shrink: 0;
   }
-  .lm-ft > div { justify-content: stretch; }
-  .lm-ft .btn-p, .lm-ft .btn-g { flex: 1; justify-content: center; }
   .lm-hint { display: none; }
+  .lm-ft > div { gap: .5rem; }
+  .lm-ft .btn-p { padding: .52rem 1.05rem; font-size: .78rem; }
+  .lm-ft .btn-g { padding: .5rem .85rem; font-size: .75rem; }
   .toast { bottom: max(76px, calc(76px + env(safe-area-inset-bottom))); max-width: calc(100vw - 2rem); white-space: normal; text-align: center; }
 }
 
 @media (max-width: 560px) {
   nav { height: 58px; }
-  .page { min-height: calc(100dvh - 58px); min-height: calc(100vh - 58px); }
-  #p1.active { padding-top: 2.25rem; }
-  .hero h1 { font-size: clamp(2.05rem, 10.8vw, 2.75rem); line-height: 1.06; }
-  .hero p { font-size: .86rem; line-height: 1.58; }
+  .page { min-height: calc(100dvh - 58px - env(safe-area-inset-top)); min-height: calc(100vh - 58px); }
+  #p1.active { padding-top: 3.5rem; }
+  .hero h1 { font-size: clamp(2.1rem, 10.8vw, 2.8rem); line-height: 1.1; margin-bottom: 1rem; }
+  .hero p { font-size: .87rem; line-height: 1.7; max-width: 280px; }
   .features { grid-template-columns: 1fr 1fr; }
   .feat-t { font-size: .76rem; }
   .feat-s { font-size: .64rem; }
   .fl-footer {
     flex-direction: column;
     align-items: stretch;
-    gap: .75rem;
+    gap: .6rem;
+    padding: .85rem 1rem .95rem;
   }
-  .fl-footer > div { justify-content: stretch; }
-  .fl-footer .btn-p, .fl-footer .btn-g { flex: 1; justify-content: center; }
-  .add-more { justify-content: center; }
+  .fl-footer > div { display: flex; gap: .5rem; }
+  .fl-footer .btn-p { flex: 1; justify-content: center; font-size: .82rem; padding: .7rem 1rem; }
+  .fl-footer .btn-g { flex-shrink: 0; padding: .7rem .95rem; font-size: .78rem; }
+  .add-more { justify-content: center; margin-bottom: .1rem; }
   .s3-meta-name { font-size: .82rem; word-break: break-word; }
   .stat-p { min-width: 0; flex: 1; }
   .spp { flex-direction: column; }
   .radio-inline { flex-direction: column; }
   .result-hero h2 { font-size: 1.2rem; }
   .result-hero p { font-size: .78rem; padding: 0 .5rem; }
-  .bbar > div:first-child { width: 100%; }
-  .bbar { gap: .55rem; }
+  .bbar > div:first-child { width: 100%; justify-content: space-between; }
+  .bbar { gap: .5rem; flex-wrap: wrap; padding: .7rem .85rem; }
+  .bbar-info { font-size: .73rem; }
+  /* Back sits in the left side of the first-child div, Continue goes last */
+  .bbar > .btn-p { width: auto; flex: 1; justify-content: center; }
+  .bbar { flex-direction: column; align-items: stretch; }
+  .bbar-info { text-align: center; padding: .1rem 0; }
+  .bbar-actions { width: 100%; }
+  .bbar-actions .btn-g { flex-shrink: 0; }
+  .bbar-actions .btn-p { flex: 1; justify-content: center; }
   .s3-bot { flex-direction: column; align-items: stretch; gap: .65rem; }
   .s3-bot .btn-g, .s3-bot .btn-p { width: 100%; justify-content: center; }
   .page-sel-row { flex-wrap: wrap; }
-  .shape-sel { flex-direction: column; }
   .info-stack { gap: .65rem; }
   .pv-pg { width: 100%; padding: .35rem; }
 }
@@ -1864,16 +2038,16 @@ input[type=range]::-webkit-slider-thumb {
   <div class="sg" id="sg"></div>
 
   <div class="bbar" id="bbar">
-    <div style="display:flex;align-items:center;gap:1rem">
-      <button class="btn-g" onclick="goStep(1)">← Back</button>
-      <div class="bbar-info">
-        <b id="bb-sel">0</b> selected &nbsp;·&nbsp; <b id="bb-rem">0</b> removed
-      </div>
+    <div class="bbar-info">
+      <b id="bb-sel">0</b> selected &nbsp;·&nbsp; <b id="bb-rem">0</b> removed
     </div>
-    <button class="btn-p" onclick="goStep(3)">
-      Continue
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9,18 15,12 9,6"/></svg>
-    </button>
+    <div class="bbar-actions">
+      <button class="btn-g" onclick="goStep(1)">← Back</button>
+      <button class="btn-p" onclick="goStep(3)">
+        Continue
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9,18 15,12 9,6"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -2128,58 +2302,104 @@ input[type=range]::-webkit-slider-thumb {
     </div>
     <div class="lm-body">
       <div class="lm-controls">
-        <div class="logo-slots">
-          <button class="logo-slot on" id="logo-slot-0" onclick="selectLogoRegion(0)">Logo 1</button>
-          <button class="logo-slot" id="logo-slot-1" onclick="selectLogoRegion(1)">Logo 2</button>
-          <button class="logo-enable on" id="logo-enable-btn" onclick="toggleActiveLogoEnabled()">Enabled</button>
+
+        <!-- ── Logo selector row + Enable/Disable ── -->
+        <div class="lm-section">
+          <div class="lm-sec-label">Logo Region</div>
+          <div class="lm-logo-tabs">
+            <button class="lm-tab on" id="logo-slot-0" onclick="selectLogoRegion(0)">
+              <span class="lm-tab-dot" style="background:rgba(30,204,122,.85)"></span>
+              Logo 1
+            </button>
+            <button class="lm-tab" id="logo-slot-1" onclick="selectLogoRegion(1)">
+              <span class="lm-tab-dot" style="background:rgba(116,104,255,.85)"></span>
+              Logo 2
+            </button>
+          </div>
+          <!-- Enable/Disable — separate row below the cards -->
+          <button class="lm-enable-toggle on" id="logo-enable-btn" onclick="toggleActiveLogoEnabled()">
+            <span class="lm-enable-dot"></span>
+            <span class="lm-enable-txt">Enabled</span>
+          </button>
         </div>
-        <div style="display:flex;gap:.85rem;flex-wrap:wrap">
-          <div style="flex:1;min-width:160px">
-            <div class="es-sec-t" style="margin-bottom:.45rem">Shape</div>
-            <div class="shape-sel" id="shape-group">
-              <div class="shape-opt on" onclick="setLogoShape('rect',this)">
-                <div class="sdot" style="width:14px;height:14px;border:2px solid var(--border3)"><div class="sdot-i"></div></div>
-                <span>Rectangle</span>
-              </div>
-              <div class="shape-opt" onclick="setLogoShape('circ',this)">
-                <div class="sdot" style="width:14px;height:14px;border:2px solid var(--border3)"><div class="sdot-i"></div></div>
-                <span>Circle</span>
-              </div>
+
+        <!-- ── Shape ── -->
+        <div class="lm-section">
+          <div class="lm-sec-label">Shape</div>
+          <div class="shape-sel" id="shape-group">
+            <div class="shape-opt on" onclick="setLogoShape('rect',this)">
+              <div class="sdot" style="width:14px;height:14px;border:2px solid var(--border3)"><div class="sdot-i"></div></div>
+              <span>Rectangle</span>
+            </div>
+            <div class="shape-opt" onclick="setLogoShape('circ',this)">
+              <div class="sdot" style="width:14px;height:14px;border:2px solid var(--border3)"><div class="sdot-i"></div></div>
+              <span>Circle</span>
             </div>
           </div>
-          <div style="flex:1;min-width:160px">
-            <div class="es-sec-t" style="margin-bottom:.45rem">Corner Position</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem" id="corner-group">
-              <div class="shape-opt on" style="justify-content:center" onclick="setLogoCorner('top-right',this)"><span style="font-size:.72rem">↗ Top Right</span></div>
-              <div class="shape-opt" style="justify-content:center" onclick="setLogoCorner('top-left',this)"><span style="font-size:.72rem">↖ Top Left</span></div>
-              <div class="shape-opt" style="justify-content:center" onclick="setLogoCorner('bot-right',this)"><span style="font-size:.72rem">↘ Bot Right</span></div>
-              <div class="shape-opt" style="justify-content:center" onclick="setLogoCorner('bot-left',this)"><span style="font-size:.72rem">↙ Bot Left</span></div>
+        </div>
+
+        <!-- ── Corner Position ── -->
+        <div class="lm-section">
+          <div class="lm-sec-label">Position</div>
+          <div class="lm-corner-grid" id="corner-group">
+            <div class="lm-corner on" onclick="setLogoCorner('top-left',this)" data-pos="top-left">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,17 7,7 17,7"/></svg>
+              <span>Top Left</span>
+            </div>
+            <div class="lm-corner" onclick="setLogoCorner('top-right',this)" data-pos="top-right">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17,17 17,7 7,7"/></svg>
+              <span>Top Right</span>
+            </div>
+            <div class="lm-corner" onclick="setLogoCorner('bot-left',this)" data-pos="bot-left">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,7 7,17 17,17"/></svg>
+              <span>Bot Left</span>
+            </div>
+            <div class="lm-corner" onclick="setLogoCorner('bot-right',this)" data-pos="bot-right">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17,7 17,17 7,17"/></svg>
+              <span>Bot Right</span>
             </div>
           </div>
         </div>
-        <div class="slider-row">
-          <span class="slider-lbl">Width</span>
-          <div class="slider-wrap">
-            <span class="slider-icon">−</span>
-            <input type="range" id="logo-w" min="1" max="50" value="11" oninput="updateLogoRegion()">
-            <span class="slider-icon">+</span>
+
+        <!-- ── Size sliders ── -->
+        <div class="lm-section lm-sliders">
+          <div class="slider-row">
+            <span class="slider-lbl">Width</span>
+            <div class="slider-wrap">
+              <button class="slider-btn" onclick="nudgeSlider('logo-w','lw-val',-1)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </button>
+              <input type="range" id="logo-w" min="1" max="50" value="13" oninput="updateLogoRegion()">
+              <button class="slider-btn" onclick="nudgeSlider('logo-w','lw-val',1)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </button>
+            </div>
+            <span class="slider-val" id="lw-val">13%</span>
           </div>
-          <span class="slider-val" id="lw-val">11%</span>
-        </div>
-        <div class="slider-row">
-          <span class="slider-lbl">Height</span>
-          <div class="slider-wrap">
-            <span class="slider-icon">−</span>
-            <input type="range" id="logo-h" min="1" max="50" value="16" oninput="updateLogoRegion()">
-            <span class="slider-icon">+</span>
+          <div class="slider-row">
+            <span class="slider-lbl">Height</span>
+            <div class="slider-wrap">
+              <button class="slider-btn" onclick="nudgeSlider('logo-h','lh-val',-1)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </button>
+              <input type="range" id="logo-h" min="1" max="50" value="13" oninput="updateLogoRegion()">
+              <button class="slider-btn" onclick="nudgeSlider('logo-h','lh-val',1)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </button>
+            </div>
+            <span class="slider-val" id="lh-val">13%</span>
           </div>
-          <span class="slider-val" id="lh-val">16%</span>
         </div>
-        <div class="page-sel-row">
-          <span class="page-sel-lbl">Preview Page:</span>
+
+        <!-- ── Preview page ── -->
+        <div class="lm-section lm-page-row">
+          <span class="slider-lbl">Page</span>
           <select class="page-sel-drop" id="logo-pg-sel" onchange="renderLogoPreview()"></select>
         </div>
+
       </div>
+
+      <!-- ── Canvas preview ── -->
       <div class="lm-preview-wrap" id="lm-wrap">
         <canvas id="lm-canvas"></canvas>
         <div class="lm-region selected" id="lm-region-0" data-logo="0" onclick="selectLogoRegion(0)">
@@ -2190,8 +2410,9 @@ input[type=range]::-webkit-slider-thumb {
         </div>
       </div>
     </div>
+
     <div class="lm-ft">
-      <span class="lm-hint">Up to two logo regions will be blended out from all pages</span>
+      <span class="lm-hint">Logo will be removed from all pages</span>
       <div style="display:flex;gap:.6rem">
         <button class="btn-g" onclick="closeLogoModal()">Cancel</button>
         <button class="btn-p" onclick="applyLogoSelection()">Apply Selection</button>
@@ -2229,8 +2450,8 @@ let drawing = false, selS = null, selE = null;
 let activeLogoIdx = 0;
 let processedPdfBlob = null, processedPdfName = '';
 let logoRegions = [
-  { w: 11, h: 16, shape: 'rect', corner: 'top-left', enabled: true, useCustom: true, customX: 0, customY: 0 },
-  { w: 11, h: 16, shape: 'rect', corner: 'top-right', enabled: false }
+  { w: 13, h: 13, shape: 'rect', corner: 'top-left', enabled: true, useCustom: true, customX: 0, customY: 0 },
+  { w: 13, h: 13, shape: 'rect', corner: 'top-right', enabled: false }
 ];
 const PDF_RENDER_BASE_SCALE = 1.65;
 const PDF_RENDER_MAX_SIDE = 1800;
@@ -2570,12 +2791,21 @@ function activeLogo() { return logoRegions[activeLogoIdx]; }
 function anyLogoEnabled() { return logoRegions.some(r => r.enabled); }
 function syncLogoControls() {
   const r = activeLogo();
-  document.querySelectorAll('.logo-slot').forEach((b,i) => {
+  // Update logo tab cards (Logo 1 / Logo 2)
+  document.querySelectorAll('#lmodal .lm-tab').forEach((b,i) => {
     b.classList.toggle('on', i === activeLogoIdx);
-    b.textContent = 'Logo ' + (i+1) + (logoRegions[i].enabled ? '' : ' off');
+    const dot = b.querySelector('.lm-tab-dot');
+    const isEnabled = logoRegions[i].enabled;
+    b.style.opacity = isEnabled ? '1' : '.55';
+    b.title = isEnabled ? '' : 'Disabled';
   });
+  // Update enable/disable button
   const en = document.getElementById('logo-enable-btn');
-  if (en) { en.classList.toggle('on', r.enabled); en.textContent = r.enabled ? 'Enabled' : 'Disabled'; }
+  if (en) {
+    en.classList.toggle('on', r.enabled);
+    const txt = en.querySelector('.lm-enable-txt');
+    if (txt) txt.textContent = r.enabled ? 'Enabled' : 'Disabled';
+  }
   document.getElementById('logo-w').value = r.w;
   document.getElementById('logo-h').value = r.h;
   document.getElementById('lw-val').textContent = r.w+'%';
@@ -2586,10 +2816,10 @@ function syncLogoControls() {
     o.classList.toggle('on', on);
     const dot = o.querySelector('.sdot-i'); if (dot) dot.style.display = on ? 'block' : 'none';
   });
-  document.querySelectorAll('#corner-group .shape-opt').forEach(o => o.classList.remove('on'));
+  document.querySelectorAll('#corner-group .lm-corner').forEach(o => o.classList.remove('on'));
   if (!r.useCustom) {
-    const idx = { 'top-right':0, 'top-left':1, 'bot-right':2, 'bot-left':3 }[r.corner || 'top-right'];
-    const opts = document.querySelectorAll('#corner-group .shape-opt');
+    const idx = { 'top-right':1, 'top-left':0, 'bot-right':3, 'bot-left':2 }[r.corner || 'top-left'];
+    const opts = document.querySelectorAll('#corner-group .lm-corner');
     if (opts[idx]) opts[idx].classList.add('on');
   }
   updateLogoRegion();
@@ -2607,7 +2837,20 @@ function toggleActiveLogoEnabled() {
 function renderLogoPreview() {
   const idx = +document.getElementById('logo-pg-sel').value || 0;
   const activeSl = slides.filter(s=>!s.removed);
-  if (!activeSl.length) return;
+  const wrap = document.getElementById('lm-wrap');
+  // Clear/hide placeholder
+  const placeholder = wrap && wrap.querySelector('.lm-preview-no-slides');
+  if (!activeSl.length) {
+    const lmc = document.getElementById('lm-canvas');
+    lmc.width = 1; lmc.height = 1;
+    if (wrap && !placeholder) {
+      const ph = document.createElement('div'); ph.className = 'lm-preview-no-slides';
+      ph.innerHTML = '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg><span>Load a PDF first</span>';
+      wrap.appendChild(ph);
+    }
+    return;
+  }
+  if (placeholder) placeholder.remove();
   const sl = activeSl[idx];
   const src = sl.edited || sl.c;
   const lmc = document.getElementById('lm-canvas');
@@ -2624,6 +2867,13 @@ function renderLogoPreview() {
     lctx.fillRect(0, 0, lmc.width, lmc.height);
     lctx.globalCompositeOperation = 'source-over';
   }
+  updateLogoRegion();
+}
+function nudgeSlider(sliderId, valId, delta) {
+  const sl = document.getElementById(sliderId);
+  if (!sl) return;
+  const nv = Math.max(+sl.min, Math.min(+sl.max, +sl.value + delta));
+  sl.value = nv;
   updateLogoRegion();
 }
 function updateLogoRegion() {
@@ -2662,7 +2912,7 @@ function setLogoCorner(c, el) {
   const r = activeLogo();
   r.corner = c;
   r.useCustom = false;
-  document.querySelectorAll('#corner-group .shape-opt').forEach(o => o.classList.remove('on'));
+  document.querySelectorAll('#corner-group .lm-corner').forEach(o => o.classList.remove('on'));
   el.classList.add('on');
   updateLogoRegion();
 }
