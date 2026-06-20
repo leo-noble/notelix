@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Env / secrets (if you add tooling later)
+.env
+.env.*
+
+# OS / temp
+Thumbs.db
+*.log
