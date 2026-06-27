@@ -1,3 +1,4 @@
+const pdfjsLib = window.pdfjsLib;
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
 // ── STATE ──
@@ -1679,7 +1680,8 @@ function blockProcessScroll(e) {
   e.stopPropagation();
 }
 function holdProcessScroll() {
-  if (!_procScrollLocked) return;
+  const screen = document.getElementById('process-screen');
+  if (!_procScrollLocked || !screen || !screen.classList.contains('open')) return;
   if ((window.scrollY || 0) !== _procScrollY) window.scrollTo(0, _procScrollY);
 }
 function initProcessScrollGuards() {
@@ -1698,15 +1700,8 @@ function lockPageScroll() {
   _procScrollY = window.scrollY || 0;
   document.documentElement.classList.add('scroll-lock');
   document.body.classList.add('scroll-lock');
-  document.documentElement.style.overflow = 'hidden';
-  document.documentElement.style.height = '100%';
-  document.body.style.position = 'fixed';
-  document.body.style.top = `-${_procScrollY}px`;
-  document.body.style.left = '0';
-  document.body.style.right = '0';
-  document.body.style.width = '100%';
-  document.body.style.height = '100%';
-  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'clip';
+  document.body.style.overflow = 'clip';
 }
 function unlockPageScroll() {
   if (_scrollLockDepth <= 0) return;
@@ -1918,4 +1913,36 @@ function showToast(msg) {
 }
 
 // init
+Object.assign(window, {
+  applyLogoSelection,
+  clearAll,
+  closeEditor,
+  closeLogoModal,
+  delPdf,
+  deselAll,
+  doDownload,
+  eRedo,
+  eUndo,
+  goStep,
+  nudgeSlider,
+  openLogoModal,
+  procAnother,
+  processFile,
+  renderLogoPreview,
+  saveEditor,
+  selAll,
+  selectLogoRegion,
+  setEAct,
+  setLogoCorner,
+  setLogoShape,
+  setRadioGroup,
+  setSelTool,
+  togLogoRow,
+  togRow,
+  togToggle,
+  toggleActiveLogoEnabled,
+  updateLP,
+  updateLogoRegion
+});
+
 syncDocSizeControls();

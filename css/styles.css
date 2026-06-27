@@ -53,7 +53,6 @@ html.scroll-lock,
 body.scroll-lock {
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none;
 }
 input, button, select, textarea { font-family: inherit; }
 /* Premium Inter settings */
@@ -569,7 +568,7 @@ nav {
 .card {
   background:
     linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),
-    linear-gradient(180deg,#181820,#0d0d12);
+    linear-gradient(180deg,rgba(24,24,30,.92),rgba(13,13,18,.98));
   border: 1px solid rgba(255,255,255,.08); border-radius: var(--r2);
   padding: 0; overflow: visible;
   box-shadow: 0 18px 46px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.04);
@@ -592,8 +591,8 @@ nav {
   border-top: 1px solid rgba(255,255,255,.05);
 }
 .card-section:last-child { padding-bottom: 1.35rem; }
-.card-enhance { border-top: 2px solid rgba(116,104,255,.55); }
-.card-layout { border-top: 2px solid rgba(30,204,122,.45); }
+.card-enhance,
+.card-layout { border-top: 2px solid rgba(116,104,255,.34); }
 .card-h { font-size: 1rem; font-weight: 800; letter-spacing: 0; margin-bottom: .22rem; }
 .card-s { font-size: .76rem; color: var(--text3); margin-bottom: 0; }
 
