@@ -562,12 +562,14 @@
 
       <!-- ── Canvas preview ── -->
       <div class="lm-preview-wrap" id="lm-wrap">
-        <canvas id="lm-canvas"></canvas>
-        <div class="lm-region selected" id="lm-region-0" data-logo="0" onclick="selectLogoRegion(0)">
-          <div class="lm-drag-handle" title="Drag to reposition">⠿</div>
-        </div>
-        <div class="lm-region off" id="lm-region-1" data-logo="1" onclick="selectLogoRegion(1)">
-          <div class="lm-drag-handle" title="Drag to reposition">⠿</div>
+        <div class="lm-stage" id="lm-stage">
+          <canvas id="lm-canvas"></canvas>
+          <div class="lm-region selected" id="lm-region-0" data-logo="0" onclick="selectLogoRegion(0)">
+            <div class="lm-drag-handle" title="Drag to reposition">⠿</div>
+          </div>
+          <div class="lm-region off" id="lm-region-1" data-logo="1" onclick="selectLogoRegion(1)">
+            <div class="lm-drag-handle" title="Drag to reposition">⠿</div>
+          </div>
         </div>
       </div>
     </div>

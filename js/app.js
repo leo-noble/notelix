@@ -608,9 +608,8 @@ function setLogoCorner(c, el) {
       window.addEventListener('touchend', onUp);
     }
   }
-  // init when modal opens
-  const origOpenLogo = window.openLogoModal;
   window._logoRegionDragInit = initLogoRegionDrag;
+  initLogoRegionDrag();
 })();
 function setLogoShape(s, el) {
   activeLogo().shape = s;
